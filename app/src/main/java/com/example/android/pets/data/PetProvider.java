@@ -102,7 +102,28 @@ public class PetProvider extends ContentProvider {
     @Nullable
     @Override
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
-        return null;
+        final int match = sUriMatcher.match(uri);
+        switch (match) {
+            case PETS:
+                return insertPet(uri, values);
+            default:
+                throw new IllegalArgumentException("Insertion is not supported for " + uri);
+        }
+    }
+
+    private Uri insertPet(Uri uri, ContentValues values) {
+        //Get a writable database from our SQLiteOpenHelper class
+        SQLiteDatabase database = mPetDbHelper.getWritableDatabase();
+
+        /**
+         * Insert a new row into the database with the provided {@link ContentValues}
+         * this should return an ID of type LONG INTEGER
+         */
+        long id = database.insert(PetContract.PetEntry.TABLE_NAME,
+                null, values);
+        //We return the content Uri with the id of the newly inserted row appended using the
+        //ConentUris helper utility class
+        return ContentUris.withAppendedId(uri, id);
     }
 
     @Override

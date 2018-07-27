@@ -19,6 +19,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -28,6 +29,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
+import com.example.android.pets.data.PetContract;
 import com.example.android.pets.data.PetContract.PetEntry;
 import com.example.android.pets.data.PetDbHelper;
 
@@ -66,10 +68,6 @@ public class CatalogActivity extends AppCompatActivity {
      * the pets database.
      */
     private void displayDatabaseInfo() {
-
-        // Create and/or open a database to read from it
-        db = mDbHelper.getReadableDatabase();
-
         //Perform a query operation that returns the entire pets table
         String projection[] = {
                 PetEntry._ID, //we want the ID
@@ -78,14 +76,25 @@ public class CatalogActivity extends AppCompatActivity {
                 PetEntry.COLUMN_PET_GENDER, //Pet gender
                 PetEntry.COLUMN_PET_WEIGHT //the pet weight
         };
-        Cursor cursor = db.query(PetEntry.TABLE_NAME,
+        /*Cursor cursor = db.query(PetEntry.TABLE_NAME,
                 projection, //The columns to return
                 null, //columns for the where clause
                 null, //values for where clause
                 null, //column to group by
                 null, //condition of grouping
                 null //the order
-        );
+        );*/
+
+        //get the Uri to query the entire table pets
+        Uri petsTableUri = PetEntry.CONTENT_URI;
+
+        Cursor cursor = getContentResolver()
+                .query(petsTableUri,
+                        projection,
+                        null,
+                        null,
+                        null);
+
         try {
             // Display the number of rows in the Cursor (which reflects the number of rows in the
             // pets table in the database).
@@ -165,18 +174,19 @@ public class CatalogActivity extends AppCompatActivity {
     }
 
     private void insertPet() {
-        db = mDbHelper.getWritableDatabase();
-        //setup content values to store into Database
+        //setup content values to store a dummy row into Database
         ContentValues values = new ContentValues();
         values.put(PetEntry.COLUMN_PET_NAME, "Toto");
         values.put(PetEntry.COLUMN_PET_BREED, "Terrier");
         values.put(PetEntry.COLUMN_PET_GENDER, PetEntry.GENDER_MALE);
         values.put(PetEntry.COLUMN_PET_WEIGHT, 7);
 
-        long index = db.insert(PetEntry.TABLE_NAME,
-                null,
-                values);
-        Log.i(TAG, "index " + index);
-
+        /**
+         * Use the content resolver to insert a new entry into our database
+         * The {@link android.content.ContentResolver} will send our insert operation to our
+         * {@link android.content.ContentProvider} {@link com.example.android.pets.data.PetProvider}
+         * and receives a Uri with the ID appended to it of the newly inserted entry
+          */
+        Uri uri = getContentResolver().insert(PetEntry.CONTENT_URI, values);
     }
 }

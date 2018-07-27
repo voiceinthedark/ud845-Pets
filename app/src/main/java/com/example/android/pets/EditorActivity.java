@@ -15,12 +15,15 @@
  */
 package com.example.android.pets;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,6 +41,8 @@ import com.example.android.pets.data.PetDbHelper;
  * Allows user to create a new pet or edit an existing one.
  */
 public class EditorActivity extends AppCompatActivity {
+
+    private static final String TAG = EditorActivity.class.getSimpleName();
 
     /** EditText field to enter the pet's name */
     private EditText mNameEditText;
@@ -127,13 +132,14 @@ public class EditorActivity extends AppCompatActivity {
         values.put(PetEntry.COLUMN_PET_GENDER, petGender);
         values.put(PetEntry.COLUMN_PET_WEIGHT, petWeight);
 
-        PetDbHelper petDbHelper = new PetDbHelper(this);
-        SQLiteDatabase database = petDbHelper.getWritableDatabase();
+        Uri newPet = getContentResolver()
+                .insert(PetEntry.CONTENT_URI, values);
 
-        long insertResult = database.insert(PetEntry.TABLE_NAME, null, values);
+        //get the id from the Uri by extracting the Last Path Segment method
+        long insertResult = Long.parseLong(newPet.getLastPathSegment());
+        Log.i(TAG, "insertNewPet: " + insertResult);
+        //Show a toast message after insertion (or failed insertion)
         showToast(insertResult);
-
-
     }
 
     /**
@@ -143,13 +149,13 @@ public class EditorActivity extends AppCompatActivity {
     private void showToast(long insertResult) {
         if(insertResult == -1){
             Toast.makeText(this,
-                    "Error could not insert new row",
+                    R.string.toast_error,
                     Toast.LENGTH_LONG)
                     .show();
         }
         else{
             Toast.makeText(this,
-                    "Pet saved with id " + insertResult,
+                    getString(R.string.toast_success),
                     Toast.LENGTH_LONG)
                     .show();
         }
