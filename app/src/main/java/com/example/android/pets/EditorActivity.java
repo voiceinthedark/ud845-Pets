@@ -15,6 +15,8 @@
  */
 package com.example.android.pets;
 
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
@@ -26,9 +28,11 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.example.android.pets.data.PetContract;
 import com.example.android.pets.data.PetContract.PetEntry;
+import com.example.android.pets.data.PetDbHelper;
 
 /**
  * Allows user to create a new pet or edit an existing one.
@@ -106,6 +110,51 @@ public class EditorActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Method to insert a new pet into the database, with the fields' values received from
+     * the layout views
+     */
+    private void insertNewPet(){
+        ContentValues values = new ContentValues();
+
+        String petName = mNameEditText.getText().toString().trim();
+        String petBreed = mBreedEditText.getText().toString().trim();
+        int petGender = mGender;
+        int petWeight = Integer.parseInt(mWeightEditText.getText().toString());
+
+        values.put(PetEntry.COLUMN_PET_NAME, petName);
+        values.put(PetEntry.COLUMN_PET_BREED, petBreed);
+        values.put(PetEntry.COLUMN_PET_GENDER, petGender);
+        values.put(PetEntry.COLUMN_PET_WEIGHT, petWeight);
+
+        PetDbHelper petDbHelper = new PetDbHelper(this);
+        SQLiteDatabase database = petDbHelper.getWritableDatabase();
+
+        long insertResult = database.insert(PetEntry.TABLE_NAME, null, values);
+        showToast(insertResult);
+
+
+    }
+
+    /**
+     * show toast message after performing the insert operation
+     * @param insertResult -1 for error, positive integer in case of success
+     */
+    private void showToast(long insertResult) {
+        if(insertResult == -1){
+            Toast.makeText(this,
+                    "Error could not insert new row",
+                    Toast.LENGTH_LONG)
+                    .show();
+        }
+        else{
+            Toast.makeText(this,
+                    "Pet saved with id " + insertResult,
+                    Toast.LENGTH_LONG)
+                    .show();
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu options from the res/menu/menu_editor.xml file.
@@ -120,7 +169,10 @@ public class EditorActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
-                // Do nothing for now
+                //save a pet into the database
+                insertNewPet();
+                //close the current activity and return to the parent activity
+                finish();
                 return true;
             // Respond to a click on the "Delete" menu option
             case R.id.action_delete:

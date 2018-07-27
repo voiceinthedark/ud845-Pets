@@ -22,6 +22,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -36,6 +37,7 @@ import com.example.android.pets.data.PetDbHelper;
  */
 public class CatalogActivity extends AppCompatActivity {
 
+    private static final String TAG = CatalogActivity.class.getSimpleName();
     private PetDbHelper mDbHelper;
     private SQLiteDatabase db;
 
@@ -109,7 +111,17 @@ public class CatalogActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * Display the database info once this activity has been restarted
+     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+        displayDatabaseInfo();
+    }
+
     private void insertPet() {
+        db = mDbHelper.getWritableDatabase();
         //setup content values to store into Database
         ContentValues values = new ContentValues();
         values.put(PetEntry.COLUMN_PET_NAME, "Toto");
@@ -120,6 +132,7 @@ public class CatalogActivity extends AppCompatActivity {
         long index = db.insert(PetEntry.TABLE_NAME,
                 null,
                 values);
+        Log.i(TAG, "index " + index);
 
     }
 }
