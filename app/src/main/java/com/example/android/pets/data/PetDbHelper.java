@@ -28,6 +28,10 @@ public class PetDbHelper extends SQLiteOpenHelper {
             PetEntry.COLUMN_PET_WEIGHT + " INTEGER NOT NULL DEFAULT 0" +
             ");";
 
+    private static final String SQL_DELETE_ENTRIES =
+            "DROP TABLE IF EXISTS " + PetEntry.TABLE_NAME + ";";
+
+
 
     public PetDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -42,7 +46,9 @@ public class PetDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        //delete table and then recreate the table
+        db.execSQL(SQL_DELETE_ENTRIES);
+        onOpen(db);
     }
 
 
