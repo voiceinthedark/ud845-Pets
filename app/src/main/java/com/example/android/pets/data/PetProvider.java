@@ -112,6 +112,28 @@ public class PetProvider extends ContentProvider {
     }
 
     private Uri insertPet(Uri uri, ContentValues values) {
+        /**
+         * Data validation
+         * name: NOT NULL
+         * breed: could be null
+         * gender: an Integer between 0 and 3
+         * weight: positive integer
+         */
+        String name = values.getAsString(PetContract.PetEntry.COLUMN_PET_NAME);
+        if(name == null){
+            throw new IllegalArgumentException("Pet requires a name");
+        }
+
+        int gender = values.getAsInteger(PetContract.PetEntry.COLUMN_PET_GENDER);
+        if(!PetContract.PetEntry.isValidGender(gender)){
+            throw new IllegalArgumentException("Pet can only be one of three genders");
+        }
+
+        int weight = values.getAsInteger(PetContract.PetEntry.COLUMN_PET_WEIGHT);
+        if(weight < 0){
+            throw new IllegalArgumentException("Pet can't have a negative weight");
+        }
+
         //Get a writable database from our SQLiteOpenHelper class
         SQLiteDatabase database = mPetDbHelper.getWritableDatabase();
 
