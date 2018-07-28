@@ -60,7 +60,7 @@ public class CatalogActivity extends AppCompatActivity {
         // and pass the context, which is the current activity.
         mDbHelper = new PetDbHelper(this);
 
-        //setup the list view
+
 
         displayDatabaseInfo();
     }
@@ -96,6 +96,10 @@ public class CatalogActivity extends AppCompatActivity {
         PetCursorAdapter petCursorAdapter = new PetCursorAdapter(this, cursor);
 
         mPetListView.setAdapter(petCursorAdapter);
+
+        //set the empty view
+        View emptyView = findViewById(R.id.empty_view);
+        mPetListView.setEmptyView(emptyView);
 
 
     }

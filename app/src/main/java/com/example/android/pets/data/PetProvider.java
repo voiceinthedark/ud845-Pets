@@ -38,6 +38,7 @@ public class PetProvider extends ContentProvider {
 
     /**
      * Instantiate our Pet {@link android.database.sqlite.SQLiteOpenHelper}
+     *
      * @return true
      */
     @Override
@@ -82,7 +83,7 @@ public class PetProvider extends ContentProvider {
                 // arguments that will fill in the "?". Since we have 1 question mark in the
                 // selection, we have 1 String in the selection arguments' String array.
                 selection = PetEntry._ID + "=?";
-                selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
 
                 // This will perform a query on the pets table where the _id equals 3 to return a
                 // Cursor containing that row of the table.
@@ -130,17 +131,17 @@ public class PetProvider extends ContentProvider {
          * weight: positive integer
          */
         String name = values.getAsString(PetEntry.COLUMN_PET_NAME);
-        if(name == null){
+        if(name == null) {
             throw new IllegalArgumentException("Pet requires a name");
         }
 
         int gender = values.getAsInteger(PetEntry.COLUMN_PET_GENDER);
-        if(!PetEntry.isValidGender(gender)){
+        if(!PetEntry.isValidGender(gender)) {
             throw new IllegalArgumentException("Pet can only be one of three genders");
         }
 
         int weight = values.getAsInteger(PetEntry.COLUMN_PET_WEIGHT);
-        if(weight < 0){
+        if(weight < 0) {
             throw new IllegalArgumentException("Pet can't have a negative weight");
         }
 
@@ -172,7 +173,7 @@ public class PetProvider extends ContentProvider {
             case PET_ID:
                 // Delete a single row given by the ID in the URI
                 selection = PetEntry._ID + "=?";
-                selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
                 return database.delete(PetEntry.TABLE_NAME, selection, selectionArgs);
             default:
                 throw new IllegalArgumentException("Deletion is not supported for " + uri);
@@ -191,7 +192,7 @@ public class PetProvider extends ContentProvider {
                 // so we know which row to update. Selection will be "_id=?" and selection
                 // arguments will be a String array containing the actual ID.
                 selection = PetEntry._ID + "=?";
-                selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
                 return updatePet(uri, values, selection, selectionArgs);
             default:
                 throw new IllegalArgumentException("Update is not supported for " + uri);
@@ -201,7 +202,7 @@ public class PetProvider extends ContentProvider {
     private int updatePet(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
         //if Content Values contains no elements skip update
-        if(values.size() == 0){
+        if(values.size() == 0) {
             return 0;
         }
 
@@ -209,27 +210,26 @@ public class PetProvider extends ContentProvider {
          * Data validation
          * We use {@link ContentValues#containsKey(String)} to check whether an attribute exists
          */
-        if(values.containsKey(PetEntry.COLUMN_PET_NAME)){
+        if(values.containsKey(PetEntry.COLUMN_PET_NAME)) {
             String name = values.getAsString(PetEntry.COLUMN_PET_NAME);
-            if(name == null){
+            if(name == null) {
                 throw new IllegalArgumentException("Pet needs a name");
             }
         }
 
-        if(values.containsKey(PetEntry.COLUMN_PET_GENDER)){
+        if(values.containsKey(PetEntry.COLUMN_PET_GENDER)) {
             Integer gender = values.getAsInteger(PetEntry.COLUMN_PET_GENDER);
-            if(gender == null || !PetEntry.isValidGender(gender)){
+            if(gender == null || !PetEntry.isValidGender(gender)) {
                 throw new IllegalArgumentException("Not a valid gender");
             }
         }
 
-        if (values.containsKey(PetEntry.COLUMN_PET_WEIGHT)){
+        if(values.containsKey(PetEntry.COLUMN_PET_WEIGHT)) {
             Integer weight = values.getAsInteger(PetEntry.COLUMN_PET_WEIGHT);
-            if(weight == null || weight < 0){
+            if(weight == null || weight < 0) {
                 throw new IllegalArgumentException("Not a valid weight");
             }
         }
-
 
 
         //Get SQLiteDatabase
