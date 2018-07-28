@@ -15,8 +15,11 @@
  */
 package com.example.android.pets;
 
+import android.app.LoaderManager;
 import android.content.ContentValues;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -26,6 +29,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.CursorAdapter;
 import android.widget.ListView;
 
 import com.example.android.pets.data.PetContract.PetEntry;
@@ -34,9 +38,13 @@ import com.example.android.pets.data.PetDbHelper;
 /**
  * Displays list of pets that were entered and stored in the app.
  */
-public class CatalogActivity extends AppCompatActivity {
+public class CatalogActivity extends AppCompatActivity /*Implements the Cursor Loader*/
+        implements LoaderManager.LoaderCallbacks<Cursor> {
+
+            private static final int LOADER_ID = 1;
 
     private static final String TAG = CatalogActivity.class.getSimpleName();
+    private PetCursorAdapter mPetCursorAdapter;
     private PetDbHelper mDbHelper;
     private SQLiteDatabase db;
     private ListView mPetListView;
@@ -56,53 +64,19 @@ public class CatalogActivity extends AppCompatActivity {
             }
         });
 
-        // To access our database, we instantiate our subclass of SQLiteOpenHelper
-        // and pass the context, which is the current activity.
-        mDbHelper = new PetDbHelper(this);
-
-
-
-        displayDatabaseInfo();
-    }
-
-    /**
-     * Temporary helper method to display information in the onscreen TextView about the state of
-     * the pets database.
-     */
-    private void displayDatabaseInfo() {
-
-        //Perform a query operation that returns the entire pets table
-        String projection[] = {
-                PetEntry._ID, //we want the ID
-                PetEntry.COLUMN_PET_NAME, //The pet name
-                PetEntry.COLUMN_PET_BREED, //Pet breed
-                PetEntry.COLUMN_PET_GENDER, //Pet gender
-                PetEntry.COLUMN_PET_WEIGHT //the pet weight
-        };
-
-        //get the Uri to query the entire table pets
-        Uri petsTableUri = PetEntry.CONTENT_URI;
-
-        Cursor cursor = getContentResolver()
-                .query(petsTableUri,
-                        projection,
-                        null,
-                        null,
-                        null);
-
-
         mPetListView = (ListView) findViewById(R.id.pet_listview);
-
-        PetCursorAdapter petCursorAdapter = new PetCursorAdapter(this, cursor);
-
-        mPetListView.setAdapter(petCursorAdapter);
+        mPetCursorAdapter = new PetCursorAdapter(this, null);
+        mPetListView.setAdapter(mPetCursorAdapter);
 
         //set the empty view
         View emptyView = findViewById(R.id.empty_view);
         mPetListView.setEmptyView(emptyView);
 
+        getLoaderManager().initLoader(LOADER_ID, null, this);
 
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -119,7 +93,6 @@ public class CatalogActivity extends AppCompatActivity {
             // Respond to a click on the "Insert dummy data" menu option
             case R.id.action_insert_dummy_data:
                 insertPet();
-                displayDatabaseInfo();
                 return true;
             // Respond to a click on the "Delete all entries" menu option
             case R.id.action_delete_all_entries:
@@ -152,6 +125,56 @@ public class CatalogActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        displayDatabaseInfo();
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+        //Perform a query operation that returns the entire pets table
+        String projection[] = {
+                PetEntry._ID, //we want the ID
+                PetEntry.COLUMN_PET_NAME, //The pet name
+                PetEntry.COLUMN_PET_BREED, //Pet breed
+                PetEntry.COLUMN_PET_GENDER, //Pet gender
+                PetEntry.COLUMN_PET_WEIGHT //the pet weight
+        };
+
+        //get the Uri to query the entire table pets
+        Uri petsTableUri = PetEntry.CONTENT_URI;
+
+        //return a cursor loader
+        //The cursor loader will perform the query on the cursor and returns a Loader<Cursor> to
+        //the onLoadFinished
+        return new CursorLoader(this,
+                petsTableUri,
+                projection,
+                null,
+                null,
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+
+        /**
+         * When the {@link LoaderManager.LoaderCallbacks#onCreateLoader(int, Bundle)} is done loading
+         * the cursor it will send them to the {@link LoaderManager.LoaderCallbacks#onLoadFinished(Loader, Object)}
+         * method.
+         * Once we receive the {@link Cursor} data we should swap the {@link CursorAdapter} {@link PetCursorAdapter}
+         */
+        mPetCursorAdapter.swapCursor(data);
+
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        /**
+         * Once the {@link LoaderManager.LoaderCallbacks} has finished loading the cursor becomes
+         * detached and invalid;
+         * in order to reuse a new cursor we need to to replace the {@link PetCursorAdapter} Cursor
+         * with a null.
+         */
+        mPetCursorAdapter.swapCursor(null);
+
     }
 }
