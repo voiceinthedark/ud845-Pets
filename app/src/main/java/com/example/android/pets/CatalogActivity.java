@@ -23,13 +23,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.TextView;
+import android.widget.ListView;
 
-import com.example.android.pets.data.PetContract;
 import com.example.android.pets.data.PetContract.PetEntry;
 import com.example.android.pets.data.PetDbHelper;
 
@@ -41,6 +39,7 @@ public class CatalogActivity extends AppCompatActivity {
     private static final String TAG = CatalogActivity.class.getSimpleName();
     private PetDbHelper mDbHelper;
     private SQLiteDatabase db;
+    private ListView mPetListView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +59,9 @@ public class CatalogActivity extends AppCompatActivity {
         // To access our database, we instantiate our subclass of SQLiteOpenHelper
         // and pass the context, which is the current activity.
         mDbHelper = new PetDbHelper(this);
+
+        //setup the list view
+
         displayDatabaseInfo();
     }
 
@@ -68,6 +70,7 @@ public class CatalogActivity extends AppCompatActivity {
      * the pets database.
      */
     private void displayDatabaseInfo() {
+
         //Perform a query operation that returns the entire pets table
         String projection[] = {
                 PetEntry._ID, //we want the ID
@@ -76,14 +79,6 @@ public class CatalogActivity extends AppCompatActivity {
                 PetEntry.COLUMN_PET_GENDER, //Pet gender
                 PetEntry.COLUMN_PET_WEIGHT //the pet weight
         };
-        /*Cursor cursor = db.query(PetEntry.TABLE_NAME,
-                projection, //The columns to return
-                null, //columns for the where clause
-                null, //values for where clause
-                null, //column to group by
-                null, //condition of grouping
-                null //the order
-        );*/
 
         //get the Uri to query the entire table pets
         Uri petsTableUri = PetEntry.CONTENT_URI;
@@ -95,48 +90,14 @@ public class CatalogActivity extends AppCompatActivity {
                         null,
                         null);
 
-        try {
-            // Display the number of rows in the Cursor (which reflects the number of rows in the
-            // pets table in the database).
-            TextView displayView = (TextView) findViewById(R.id.text_view_pet);
-            displayView.setText("Number of rows in pets database table: " + cursor.getCount());
 
-            //get the column indices
-            int idColumnIndex = cursor.getColumnIndex(PetEntry._ID);
-            int nameColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_NAME);
-            int breedColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_BREED);
-            int genderColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_GENDER);
-            int weightColumnIndex = cursor.getColumnIndex(PetEntry.COLUMN_PET_WEIGHT);
+        mPetListView = (ListView) findViewById(R.id.pet_listview);
 
-            //set the names of columns
-            displayView.append("\n" + cursor.getColumnName(idColumnIndex) +
-                    " - " + cursor.getColumnName(nameColumnIndex) +
-                    " - " + cursor.getColumnName(breedColumnIndex) +
-                    " - " + cursor.getColumnName(genderColumnIndex) +
-                    " - " + cursor.getColumnName(weightColumnIndex) + "\n");
+        PetCursorAdapter petCursorAdapter = new PetCursorAdapter(this, cursor);
 
-            //iterate through the cursor to capture the rows
-            while (cursor.moveToNext()) {
-                int idPet = cursor.getInt(idColumnIndex);
-                String namePet = cursor.getString(nameColumnIndex);
-                String breedPet = cursor.getString(breedColumnIndex);
-                int genderPet = cursor.getInt(genderColumnIndex);
-                int weightPet = cursor.getInt(weightColumnIndex);
+        mPetListView.setAdapter(petCursorAdapter);
 
-                displayView.append("\n" +
-                        idPet + " - " +
-                        namePet + " - " +
-                        breedPet + " - " +
-                        genderPet + " - " +
-                        weightPet);
 
-            }
-
-        } finally {
-            // Always close the cursor when you're done reading from it. This releases all its
-            // resources and makes it invalid.
-            cursor.close();
-        }
     }
 
     @Override
@@ -164,15 +125,6 @@ public class CatalogActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * Display the database info once this activity has been restarted
-     */
-    @Override
-    protected void onStart() {
-        super.onStart();
-        displayDatabaseInfo();
-    }
-
     private void insertPet() {
         //setup content values to store a dummy row into Database
         ContentValues values = new ContentValues();
@@ -186,7 +138,16 @@ public class CatalogActivity extends AppCompatActivity {
          * The {@link android.content.ContentResolver} will send our insert operation to our
          * {@link android.content.ContentProvider} {@link com.example.android.pets.data.PetProvider}
          * and receives a Uri with the ID appended to it of the newly inserted entry
-          */
+         */
         Uri uri = getContentResolver().insert(PetEntry.CONTENT_URI, values);
+    }
+
+    /**
+     * Display the database info once this activity has been restarted
+     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+        displayDatabaseInfo();
     }
 }
