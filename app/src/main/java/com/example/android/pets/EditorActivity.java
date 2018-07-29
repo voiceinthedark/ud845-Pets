@@ -284,6 +284,58 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         }
     }
 
+    private void showDeleteConfirmationDialog() {
+        // Create an AlertDialog.Builder and set the message, and click listeners
+        // for the postivie and negative buttons on the dialog.
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.delete_dialog_msg);
+        builder.setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked the "Delete" button, so delete the pet.
+                deletePet();
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked the "Cancel" button, so dismiss the dialog
+                // and continue editing the pet.
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        // Create and show the AlertDialog
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    /**
+     * Perform the deletion of the pet in the database.
+     */
+    private void deletePet() {
+        if(mPetUri != null) {
+            //delete the pet
+            int deletionResult = getContentResolver().delete(mPetUri, null, null);
+            if(deletionResult > 0){
+                //it is successful
+                Toast.makeText(this,
+                        getString(R.string.editor_delete_pet_successful),
+                        Toast.LENGTH_SHORT)
+                        .show();
+            }
+            else {
+                Toast.makeText(this,
+                        getString(R.string.editor_delete_pet_failed),
+                        Toast.LENGTH_SHORT)
+                        .show();
+            }
+
+            //close activity
+            finish();
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu options from the res/menu/menu_editor.xml file.
@@ -305,7 +357,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 return true;
             // Respond to a click on the "Delete" menu option
             case R.id.action_delete:
-                // Do nothing for now
+                showDeleteConfirmationDialog();
+
                 return true;
             // Respond to a click on the "Up" arrow button in the app bar
             case android.R.id.home:
@@ -343,19 +396,21 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        //move cursor to first position
-        data.moveToFirst();
+        if(data != null && data.getCount() > 0) {
+            //move cursor to first position
+            data.moveToFirst();
 
-        //get the data from the cursor and bind them to our views
-        int nameIndex = data.getColumnIndex(PetEntry.COLUMN_PET_NAME);
-        int breedIndex = data.getColumnIndex(PetEntry.COLUMN_PET_BREED);
-        int genderIndex = data.getColumnIndex(PetEntry.COLUMN_PET_GENDER);
-        int weightIndex = data.getColumnIndex(PetEntry.COLUMN_PET_WEIGHT);
+            //get the data from the cursor and bind them to our views
+            int nameIndex = data.getColumnIndex(PetEntry.COLUMN_PET_NAME);
+            int breedIndex = data.getColumnIndex(PetEntry.COLUMN_PET_BREED);
+            int genderIndex = data.getColumnIndex(PetEntry.COLUMN_PET_GENDER);
+            int weightIndex = data.getColumnIndex(PetEntry.COLUMN_PET_WEIGHT);
 
-        mNameEditText.setText(data.getString(nameIndex));
-        mBreedEditText.setText(data.getString(breedIndex));
-        mGenderSpinner.setSelection(data.getInt(genderIndex));
-        mWeightEditText.setText(data.getString(weightIndex));
+            mNameEditText.setText(data.getString(nameIndex));
+            mBreedEditText.setText(data.getString(breedIndex));
+            mGenderSpinner.setSelection(data.getInt(genderIndex));
+            mWeightEditText.setText(data.getString(weightIndex));
+        }
     }
 
     @Override
