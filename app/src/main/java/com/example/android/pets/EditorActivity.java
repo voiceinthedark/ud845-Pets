@@ -89,8 +89,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mGenderSpinner = (Spinner) findViewById(R.id.spinner_gender);
 
         setupSpinner();
-
-
     }
 
     /**
@@ -148,7 +146,15 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         String petName = mNameEditText.getText().toString().trim();
         String petBreed = mBreedEditText.getText().toString().trim();
         int petGender = mGender;
-        int petWeight = Integer.parseInt(mWeightEditText.getText().toString());
+        String petWeightString = mWeightEditText.getText().toString();
+
+        //check whether fields are empty
+        if(TextUtils.isEmpty(petName) || TextUtils.isEmpty(petBreed)
+                || TextUtils.isEmpty(petWeightString)){
+            return;
+        }
+        //if none of the fields are empty continue saving the pet into the database
+        int petWeight = Integer.parseInt(petWeightString);
 
         values.put(PetEntry.COLUMN_PET_NAME, petName);
         values.put(PetEntry.COLUMN_PET_BREED, petBreed);
