@@ -93,5 +93,6 @@
     <string name="catalog_delete_pets_success">All pets were deleted</string>
 
     <string name="catalog_delete_pets_failed">Pets deletion failed</string>
+    <string name="adapter_unknown">Unknown breed</string>
 
 </resources>
