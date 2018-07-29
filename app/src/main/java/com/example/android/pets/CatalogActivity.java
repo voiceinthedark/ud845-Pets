@@ -18,6 +18,7 @@ package com.example.android.pets;
 import android.app.LoaderManager;
 import android.content.ContentValues;
 import android.content.CursorLoader;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
@@ -25,6 +26,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -33,6 +35,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.CursorAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.android.pets.data.PetContract.PetEntry;
 import com.example.android.pets.data.PetDbHelper;
@@ -49,6 +52,7 @@ public class CatalogActivity extends AppCompatActivity /*Implements the Cursor L
     private PetCursorAdapter mPetCursorAdapter;
     private SQLiteDatabase db;
     private ListView mPetListView;
+    private Uri mPetsTableUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,7 +118,8 @@ public class CatalogActivity extends AppCompatActivity /*Implements the Cursor L
                 return true;
             // Respond to a click on the "Delete all entries" menu option
             case R.id.action_delete_all_entries:
-                // Do nothing for now
+                //show the dialog to confirm deletion of the table
+                showDeleteConfirmationDialog();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -135,6 +140,46 @@ public class CatalogActivity extends AppCompatActivity /*Implements the Cursor L
          * and receives a Uri with the ID appended to it of the newly inserted entry
          */
         Uri uri = getContentResolver().insert(PetEntry.CONTENT_URI, values);
+    }
+
+    private void showDeleteConfirmationDialog() {
+        // Create an AlertDialog.Builder and set the message, and click listeners
+        // for the postivie and negative buttons on the dialog.
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.delete_dialog_msg);
+        builder.setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked the "Delete" button, so delete the pets.
+                deleteAllPets();
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked the "Cancel" button, so dismiss the dialog
+                // and continue browsing the list
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        // Create and show the AlertDialog
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void deleteAllPets() {
+        int rowsDeleted = getContentResolver().delete(mPetsTableUri, null, null);
+        if(rowsDeleted > 0){
+            Toast.makeText(this,
+                    getString(R.string.catalog_delete_pets_success),
+                    Toast.LENGTH_SHORT)
+                    .show();
+        }else {
+            Toast.makeText(this, getString(R.string.catalog_delete_pets_failed),
+                    Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     /**
@@ -158,13 +203,13 @@ public class CatalogActivity extends AppCompatActivity /*Implements the Cursor L
         };
 
         //get the Uri to query the entire table pets
-        Uri petsTableUri = PetEntry.CONTENT_URI;
+        mPetsTableUri = PetEntry.CONTENT_URI;
 
         //return a cursor loader
         //The cursor loader will perform the query on the cursor and returns a Loader<Cursor> to
         //the onLoadFinished
         return new CursorLoader(this, //The activity context
-                petsTableUri, //the Uri
+                mPetsTableUri, //the Uri
                 projection, //The table columns projection
                 null, //The selection
                 null, //the selection arguments
