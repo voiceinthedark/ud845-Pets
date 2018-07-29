@@ -26,9 +26,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.CursorAdapter;
 import android.widget.ListView;
 
@@ -41,11 +43,10 @@ import com.example.android.pets.data.PetDbHelper;
 public class CatalogActivity extends AppCompatActivity /*Implements the Cursor Loader*/
         implements LoaderManager.LoaderCallbacks<Cursor> {
 
-            private static final int LOADER_ID = 1;
+    private static final int LOADER_ID = 1;
 
     private static final String TAG = CatalogActivity.class.getSimpleName();
     private PetCursorAdapter mPetCursorAdapter;
-    private PetDbHelper mDbHelper;
     private SQLiteDatabase db;
     private ListView mPetListView;
 
@@ -72,10 +73,27 @@ public class CatalogActivity extends AppCompatActivity /*Implements the Cursor L
         View emptyView = findViewById(R.id.empty_view);
         mPetListView.setEmptyView(emptyView);
 
+        mPetListView.setOnItemClickListener(clickPetItem);
+
         getLoaderManager().initLoader(LOADER_ID, null, this);
 
     }
 
+    /**
+     * Setup a click listener on the items in the list view
+     */
+    private AdapterView.OnItemClickListener clickPetItem = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            //setup the Uri
+            Uri petUri = PetEntry.CONTENT_URI; //content://com.example.pets/pets
+            // content://com.example.pets/pets/#
+            petUri = petUri.buildUpon().appendPath(String.valueOf(id)).build();
+            //send the intent
+            Intent intent = EditorActivity.newIntent(CatalogActivity.this, petUri);
+            startActivity(intent);
+        }
+    };
 
 
     @Override
@@ -145,12 +163,12 @@ public class CatalogActivity extends AppCompatActivity /*Implements the Cursor L
         //return a cursor loader
         //The cursor loader will perform the query on the cursor and returns a Loader<Cursor> to
         //the onLoadFinished
-        return new CursorLoader(this,
-                petsTableUri,
-                projection,
-                null,
-                null,
-                null);
+        return new CursorLoader(this, //The activity context
+                petsTableUri, //the Uri
+                projection, //The table columns projection
+                null, //The selection
+                null, //the selection arguments
+                null); //the sort order
     }
 
     @Override

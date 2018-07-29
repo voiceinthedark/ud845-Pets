@@ -93,6 +93,10 @@ public class PetProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Cannot query unknown URI " + uri);
         }
+
+        //notify the Cursor Loader that data changed on the uri
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+
         return cursor;
     }
 
@@ -154,6 +158,10 @@ public class PetProvider extends ContentProvider {
          */
         long id = database.insert(PetEntry.TABLE_NAME,
                 null, values);
+
+        //Notify the Cursor Loader that the Cursor has changed
+        getContext().getContentResolver().notifyChange(uri, null);
+
         //We return the content Uri with the id of the newly inserted row appended using the
         //ConentUris helper utility class
         return ContentUris.withAppendedId(uri, id);
@@ -168,16 +176,26 @@ public class PetProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
         switch (match) {
             case PETS:
+
                 // Delete all rows that match the selection and selection args
-                return database.delete(PetEntry.TABLE_NAME, selection, selectionArgs);
+                return deletePet(selection, selectionArgs, database, uri);
             case PET_ID:
                 // Delete a single row given by the ID in the URI
                 selection = PetEntry._ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
-                return database.delete(PetEntry.TABLE_NAME, selection, selectionArgs);
+                return deletePet(selection, selectionArgs, database, uri);
             default:
                 throw new IllegalArgumentException("Deletion is not supported for " + uri);
         }
+    }
+
+    private int deletePet(@Nullable String selection, @Nullable String[] selectionArgs,
+                          SQLiteDatabase database, Uri uri) {
+        int rowsDeleted = database.delete(PetEntry.TABLE_NAME, selection, selectionArgs);
+        if(rowsDeleted > 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return rowsDeleted;
     }
 
     @Override
@@ -240,6 +258,8 @@ public class PetProvider extends ContentProvider {
                 selection,
                 selectionArgs);
 
+        //notify the Cursor Loader that the Cursor was updated
+        getContext().getContentResolver().notifyChange(uri, null);
         //return the number of rows affected
         return rowsAffected;
     }
